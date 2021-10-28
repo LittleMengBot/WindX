@@ -6165,7 +6165,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         needHide = needHideMessage();
         if (needHide) {
-            totalHeight = 10;
+            totalHeight = 0;
             drawTime = false;
             needNewVisiblePart = false;
             needReplyImage = false;
