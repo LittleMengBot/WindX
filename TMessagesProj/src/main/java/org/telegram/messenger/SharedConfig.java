@@ -149,7 +149,7 @@ public class SharedConfig {
     public static int repeatMode;
     public static boolean allowBigEmoji;
     public static boolean useSystemEmoji;
-    public static int fontSize = 12;
+    public static int fontSize = 16;
     public static int bubbleRadius = 3;
     public static int ivFontSize = 12;
     public static int messageSeenHintCount;
