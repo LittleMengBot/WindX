@@ -24686,7 +24686,17 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             } else if (position >= messagesStartRow && position < messagesEndRow) {
                 MessageObject message = messages.get(position - messagesStartRow);
                 View view = holder.itemView;
-                boolean fromUserBlocked = getMessagesController().blockePeers.indexOfKey(message.getFromChatId()) >= 0 && NekoConfig.ignoreBlocked;
+                boolean fromUserBlocked = false;
+                if (NekoConfig.ignoreBlocked &&
+                        getMessagesController().blockePeers.indexOfKey(message.getFromChatId()) >= 0){
+                    fromUserBlocked = true;
+                }
+                if (message.replyMessageObject != null){
+                    if (NekoConfig.ignoreBlocked && getMessagesController().blockePeers.indexOfKey(message.replyMessageObject.messageOwner.from_id.user_id) >= 0) {
+                        fromUserBlocked = true;
+                    }
+                }
+
 
                 if (view instanceof ChatMessageCell) {
                     final ChatMessageCell messageCell = (ChatMessageCell) view;
@@ -25039,7 +25049,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         }
                     }
                     if (fromUserBlocked) {
-                        messageCell.setVisibility(View.GONE);
+                        messageCell.setVisibility(View.INVISIBLE);
                     } else {
                         messageCell.setVisibility(View.VISIBLE);
                     }

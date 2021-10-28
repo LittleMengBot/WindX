@@ -27,8 +27,7 @@ object SubManager {
 
                 urls = listOf(
                         "https://nekox.pages.dev/proxy_list_pro",
-                        "https://github.com/NekoX-Dev/ProxyList/blob/master/proxy_list_pro@js-file-line\">@<",
-                        "https://gitee.com/nekoshizuku/AwesomeRepo/raw/master/proxy_list_pro"
+                        "https://github.com/NekoX-Dev/ProxyList/blob/master/proxy_list_pro@js-file-line\">@<"
                 )
 
                 id = 1L

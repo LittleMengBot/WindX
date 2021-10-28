@@ -834,6 +834,24 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private final Theme.ResourcesProvider resourcesProvider;
 
     private boolean needHideMessage() {
+        if (currentMessageObject.messageOwner.hide) {
+            return true;
+        }else if (MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(currentMessageObject.getFromChatId()) >= 0 &&
+                NekoConfig.ignoreBlocked && !(getParent() != null && getParent().getClass().getName().contains("ChannelAdminLogActivity"))){
+            return true;
+        }else if (currentMessageObject.replyMessageObject != null){
+            try {
+                if (MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(currentMessageObject.replyMessageObject.messageOwner.from_id.user_id) >= 0 &&
+                        NekoConfig.ignoreBlocked && !(getParent() != null && getParent().getClass().getName().contains("ChannelAdminLogActivity"))){
+                    return true;
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }else {
+            return false;
+        }
+
         return currentMessageObject.messageOwner.hide ||
                 MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(currentMessageObject.getFromChatId()) >= 0 &&
                         NekoConfig.ignoreBlocked && !(getParent() != null && getParent().getClass().getName().contains("ChannelAdminLogActivity"));
@@ -6147,7 +6165,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         needHide = needHideMessage();
         if (needHide) {
-            totalHeight = 0;
+            totalHeight = 10;
             drawTime = false;
             needNewVisiblePart = false;
             needReplyImage = false;

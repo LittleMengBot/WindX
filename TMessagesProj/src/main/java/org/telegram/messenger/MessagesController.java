@@ -7798,7 +7798,8 @@ public class MessagesController extends BaseController implements NotificationCe
             TLRPC.Message lastMessage = null;
             for (int a = 0; a < dialogsRes.messages.size(); a++) {
                 TLRPC.Message message = dialogsRes.messages.get(a);
-                if (NekoConfig.ignoreBlocked && getMessagesController().blockePeers.indexOfKey(message.peer_id.user_id) >= 0) {
+                if (NekoConfig.ignoreBlocked
+                        && getMessagesController().blockePeers.indexOfKey(message.peer_id.user_id) >= 0) {
                     continue;
                 }
                 if (lastMessage == null || message.date < lastMessage.date) {
@@ -14337,7 +14338,8 @@ public class MessagesController extends BaseController implements NotificationCe
                 dialog.top_message = lastMessage.getId();
                 dialog.last_message_date = lastMessage.messageOwner.date;
                 changed = true;
-                if(NekoConfig.ignoreBlocked && blockePeers.indexOfKey(lastMessage.getSenderId())>=0){
+                if(NekoConfig.ignoreBlocked
+                        && blockePeers.indexOfKey(lastMessage.getSenderId())>=0){
                     MessageObject preMsg = dialogMessage.get(dialogId);
                     if(blockePeers.indexOfKey(preMsg.getSenderId())<0)
                         dialogMessageFromUnblocked.put(dialogId, preMsg);
