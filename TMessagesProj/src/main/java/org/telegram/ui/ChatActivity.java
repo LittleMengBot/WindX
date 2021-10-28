@@ -25049,7 +25049,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         }
                     }
                     if (fromUserBlocked) {
-                        messageCell.setVisibility(View.ONE);
+                        messageCell.setVisibility(View.GONE);
                     } else {
                         messageCell.setVisibility(View.VISIBLE);
                     }
