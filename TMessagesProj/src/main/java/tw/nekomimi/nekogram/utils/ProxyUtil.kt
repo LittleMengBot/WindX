@@ -226,7 +226,8 @@ object ProxyUtil {
     @JvmStatic
     fun importFromClipboard(ctx: Activity) {
 
-        var text = (ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip?.getItemAt(0)?.text?.toString()
+        var
+                ..= (ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip?.getItemAt(0)?.text?.toString()
 
         val proxies = mutableListOf<SharedConfig.ProxyInfo>()
 
