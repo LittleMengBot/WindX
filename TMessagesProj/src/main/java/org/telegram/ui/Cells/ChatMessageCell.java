@@ -834,10 +834,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private final Theme.ResourcesProvider resourcesProvider;
 
     private boolean needHideMessage() {
-        if (currentMessageObject.messageOwner.hide) {
-            return true;
-        }else if (MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(currentMessageObject.getFromChatId()) >= 0 &&
-                NekoConfig.ignoreBlocked && !(getParent() != null && getParent().getClass().getName().contains("ChannelAdminLogActivity"))){
+        if (currentMessageObject.messageOwner.hide ||
+                (MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(currentMessageObject.getFromChatId()) >= 0 &&
+                NekoConfig.ignoreBlocked && !(getParent() != null && getParent().getClass().getName().contains("ChannelAdminLogActivity")))) {
             return true;
         }else if (currentMessageObject.replyMessageObject != null){
             try {
@@ -848,13 +847,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }catch (Exception e){
                 e.printStackTrace();
             }
-        }else {
-            return false;
         }
-
-        return currentMessageObject.messageOwner.hide ||
-                MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(currentMessageObject.getFromChatId()) >= 0 &&
-                        NekoConfig.ignoreBlocked && !(getParent() != null && getParent().getClass().getName().contains("ChannelAdminLogActivity"));
+        return false;
     }
 
     public ChatMessageCell(Context context) {
