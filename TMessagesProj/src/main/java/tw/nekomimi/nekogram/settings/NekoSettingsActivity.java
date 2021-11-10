@@ -273,7 +273,7 @@ public class NekoSettingsActivity extends BaseFragment {
         spToJSON("mainconfig", configJson, mainconfig::contains);
         spToJSON("themeconfig", configJson, null);
 
-        spToJSON("nekoconfig", configJson, null);
+        spToJSON("nkmrcfg", configJson, null);
 
         return configJson.toString(4);
     }
@@ -384,7 +384,7 @@ public class NekoSettingsActivity extends BaseFragment {
         /*if (ExternalGcm.checkPlayServices()) {
             googlePlayRow = rowCount++;
         } else {*/
-            googlePlayRow = -1;
+        googlePlayRow = -1;
 //        }
         sourceCodeRow = rowCount++;
         translationRow = rowCount++;
@@ -467,7 +467,7 @@ public class NekoSettingsActivity extends BaseFragment {
                     } else if (position == generalRow) {
                         textCell.setTextAndIcon(LocaleController.getString("General", R.string.General), R.drawable.baseline_palette_24, true);
                     } else if (position == experimentRow) {
-                        textCell.setTextAndIcon(LocaleController.getString("Experiment", R.string.Experiment), R.drawable.baseline_star_24, false);
+                        textCell.setTextAndIcon(LocaleController.getString("Experiment", R.string.Experiment), R.drawable.baseline_star_24, true);
                     } else if (position == accountRow) {
                         textCell.setTextAndIcon(LocaleController.getString("Account", R.string.Account), R.drawable.baseline_person_24, true);
                     }

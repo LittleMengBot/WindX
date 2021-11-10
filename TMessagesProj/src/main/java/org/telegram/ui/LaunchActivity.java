@@ -55,6 +55,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -150,6 +151,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -158,7 +160,8 @@ import kotlin.Unit;
 import kotlin.text.StringsKt;
 import tw.nekomimi.nekogram.BottomBuilder;
 import tw.nekomimi.nekogram.ExternalGcm;
-import tw.nekomimi.nekogram.NekoConfig;
+import tw.nekomimi.nekogram.utils.EnvUtil;
+import tw.nekomimi.nkmr.NekomuraConfig;
 import tw.nekomimi.nekogram.NekoXConfig;
 import tw.nekomimi.nekogram.settings.NekoSettingsActivity;
 import tw.nekomimi.nekogram.sub.SubInfo;
@@ -561,46 +564,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             } else if (view instanceof DrawerActionCheckCell) {
                 int id = drawerLayoutAdapter.getId(position);
                 //  DrawerLayoutAdapter.CheckItem item = drawerLayoutAdapter.getItem(position);
-                if (id == 12) {
-                    SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("themeconfig", Activity.MODE_PRIVATE);
-                    String dayThemeName = preferences.getString("lastDayTheme", "Blue");
-                    if (Theme.getTheme(dayThemeName) == null) {
-                        dayThemeName = "Blue";
-                    }
-                    String nightThemeName = preferences.getString("lastDarkTheme", "Night");
-                    if (Theme.getTheme(nightThemeName) == null) {
-                        nightThemeName = "Night";
-                    }
-                    Theme.ThemeInfo themeInfo = Theme.getActiveTheme();
-
-                    ((DrawerActionCheckCell) view).setChecked(!themeInfo.isDark());
-
-                    if (dayThemeName.equals(nightThemeName)) {
-                        if (themeInfo.isDark()) {
-                            dayThemeName = "Blue";
-                        } else {
-                            nightThemeName = "Night";
-                        }
-                    }
-
-                    if (dayThemeName.equals(themeInfo.getKey())) {
-                        themeInfo = Theme.getTheme(nightThemeName);
-                    } else {
-                        themeInfo = Theme.getTheme(dayThemeName);
-                    }
-                    if (Theme.selectedAutoNightType != Theme.AUTO_NIGHT_TYPE_NONE) {
-                        AlertUtil.showToast(LocaleController.getString("AutoNightModeOff", R.string.AutoNightModeOff));
-                        Theme.selectedAutoNightType = Theme.AUTO_NIGHT_TYPE_NONE;
-                        Theme.saveAutoNightThemeConfig();
-                        Theme.cancelAutoNightThemeCallbacks();
-                    }
-                    int[] pos = new int[2];
-                    Switch s = ((DrawerActionCheckCell) view).checkBox;
-                    s.getLocationInWindow(pos);
-                    pos[0] += s.getMeasuredWidth() / 2;
-                    pos[1] += s.getMeasuredHeight() / 2;
-                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme, themeInfo, false, pos, -1);
-                } else if (id == 13) {
+                if (id == 13) {
                     presentFragment(new ProxyListActivity());
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (id == 14) {
@@ -1507,6 +1471,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                                     }
                                     if (exportingChatUri == null) {
                                         path = AndroidUtilities.getPath(uri);
+                                        if (!BuildVars.NO_SCOPED_STORAGE) {
+                                            path = MediaController.copyFileToCache(uri, "file");
+                                        }
                                         if (path != null) {
                                             if (path.startsWith("file:")) {
                                                 path = path.replace("file://", "");
@@ -3461,13 +3428,17 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 int notFound = 2;
                 if (response instanceof TLRPC.TL_theme) {
                     TLRPC.TL_theme t = (TLRPC.TL_theme) response;
-                    if (t.settings != null) {
-                        String key = Theme.getBaseThemeKey(t.settings);
+                    TLRPC.ThemeSettings settings = null;
+                    if (t.settings.size() > 0) {
+                        settings = t.settings.get(0);
+                    }
+                    if (settings != null) {
+                        String key = Theme.getBaseThemeKey(settings);
                         Theme.ThemeInfo info = Theme.getTheme(key);
                         if (info != null) {
                             TLRPC.TL_wallPaper object;
-                            if (t.settings.wallpaper instanceof TLRPC.TL_wallPaper) {
-                                object = (TLRPC.TL_wallPaper) t.settings.wallpaper;
+                            if (settings.wallpaper instanceof TLRPC.TL_wallPaper) {
+                                object = (TLRPC.TL_wallPaper) settings.wallpaper;
                                 File path = FileLoader.getPathToAttach(object.document, true);
                                 if (!path.exists()) {
                                     loadingThemeProgressDialog = progressDialog;
@@ -4296,11 +4267,19 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
             passcodeView.onResume();
         }
+
+        if (NekomuraConfig.disableProxyWhenVpnEnabled.Bool()) {
+            if (SharedConfig.proxyEnabled && ProxyUtil.isVPNEnabled()) {
+                SharedConfig.setProxyEnable(false);
+            } else if (!ProxyUtil.isVPNEnabled()) {
+                SharedConfig.setProxyEnable(true);
+            }
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.proxySettingsChanged);
+        }
+
         ConnectionsManager.getInstance(currentAccount).setAppPaused(false, false);
         updateCurrentConnectionState(currentAccount);
-        if (NekoConfig.disableProxyWhenVpnEnabled && SharedConfig.proxyEnabled && ProxyUtil.isVPNEnabled()) {
-            SharedConfig.setProxyEnable(false);
-        }
+
         if (PhotoViewer.hasInstance() && PhotoViewer.getInstance().isVisible()) {
             PhotoViewer.getInstance().onResume();
         }
@@ -4571,8 +4550,10 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     themeSwitchImageView.setVisibility(View.VISIBLE);
                     themeSwitchSunDrawable = darkThemeView.getAnimatedDrawable();
                     float finalRadius = (float) Math.max(Math.sqrt((w - pos[0]) * (w - pos[0]) + (h - pos[1]) * (h - pos[1])), Math.sqrt(pos[0] * pos[0] + (h - pos[1]) * (h - pos[1])));
+                    float finalRadius2 = (float) Math.max(Math.sqrt((w - pos[0]) * (w - pos[0]) + pos[1] * pos[1]), Math.sqrt(pos[0] * pos[0] + pos[1] * pos[1]));
+                    finalRadius = Math.max(finalRadius, finalRadius2);
                     Animator anim = ViewAnimationUtils.createCircularReveal(toDark ? drawerLayoutContainer : themeSwitchImageView, pos[0], pos[1], toDark ? 0 : finalRadius, toDark ? finalRadius : 0);
-                    anim.setDuration(100);
+                    anim.setDuration(400);
                     anim.setInterpolator(Easings.easeInOutQuad);
                     anim.addListener(new AnimatorListenerAdapter() {
                         @Override
@@ -4584,7 +4565,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                             if (!toDark) {
                                 darkThemeView.setVisibility(View.VISIBLE);
                             }
-                            drawerLayoutAdapter.notifyDataSetChanged();
+                            DrawerProfileCell.switchingTheme = false;
                         }
                     });
                     anim.start();
@@ -4594,6 +4575,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     try {
                         themeSwitchImageView.setImageDrawable(null);
                         frameLayout.removeView(themeSwitchImageView);
+                        DrawerProfileCell.switchingTheme = false;
                     } catch (Exception e2) {
                         FileLog.e(e2);
                     }

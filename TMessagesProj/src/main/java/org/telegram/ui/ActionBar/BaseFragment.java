@@ -50,7 +50,7 @@ import org.telegram.ui.Components.LayoutHelper;
 
 import java.util.ArrayList;
 
-import tw.nekomimi.nekogram.NekoConfig;
+import tw.nekomimi.nkmr.NekomuraConfig;
 import tw.nekomimi.nekogram.utils.VibrateUtil;
 import tw.nekomimi.nekogram.MessageHelper;
 
@@ -62,7 +62,7 @@ public abstract class BaseFragment {
     protected int currentAccount = UserConfig.selectedAccount;
 
     protected View fragmentView;
-    protected ActionBarLayout parentLayout;
+    public ActionBarLayout parentLayout;
     protected ActionBar actionBar;
     protected boolean inPreviewMode;
     protected boolean inBubbleMode;
@@ -178,7 +178,7 @@ public abstract class BaseFragment {
     public void setParentFragment(BaseFragment fragment) {
         setParentLayout(fragment.parentLayout);
         fragmentView = createView(parentLayout.getContext());
-        if (NekoConfig.disableVibration) {
+        if (NekomuraConfig.disableVibration.Bool()) {
             VibrateUtil.disableHapticFeedback(fragmentView);
         }
     }
@@ -724,5 +724,4 @@ public abstract class BaseFragment {
     public Theme.ResourcesProvider getResourceProvider() {
         return null;
     }
-
 }
